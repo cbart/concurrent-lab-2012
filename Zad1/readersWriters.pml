@@ -1,67 +1,62 @@
-#define READERS 1
-#define WRITERS 1
+#define READERS 3
+#define WRITERS 3
 
-bit mutex = true;
-bit memory = true;
-byte wt_readers = 0;
-byte wt_writers = 0;
-byte in_readers = 0;
-byte in_writers = 0;
+bit mutex = 1;
+bit memory = 1;
+byte readers = 0;
+byte writers = 0;
+byte in_reading = 0;
+byte in_writing = 0;
 
-inline p(s) {
+inline P(s) {
   d_step {
     s;
     s = false
   }
 }
 
-inline v(s) {
+inline V(s) {
   s = true
 }
 
 active [READERS] proctype Reader() {
   do :: skip ->
-    p(mutex);
-    wt_readers++;
-    if :: (wt_writers > 0 || in_readers == 0) ->
-      v(mutex);
-      p(memory)
+    P(mutex);
+    if :: ((writers > 0) || (readers == 0)) ->
+      V(mutex);
+      P(memory);
+      P(mutex)
     :: else -> skip fi;
-    in_readers++;
-    v(mutex);
+    readers++;
+    V(mutex);
 
-    assert(in_writers == 0);
+    in_reading++;
+    assert(in_writing == 0);
+    in_reading--;
 
-    p(mutex);
-    in_readers--;
-    if :: in_readers == 0 ->
-      v(memory)
+    P(mutex);
+    readers--;
+    if :: (readers == 0) ->
+      V(memory)
     :: else -> skip fi;
-    v(mutex)
+    V(mutex)
   od
 }
 
 active [WRITERS] proctype Writer() {
   do :: skip ->
-    p(mutex);
-    wt_writers++;
-    v(mutex);
-    p(memory);
-    p(mutex);
-    wt_writers--;
-    in_writers++;
-    v(mutex);
+    P(mutex);
+    writers++;
+    V(mutex);
+    P(memory);
 
-    assert(in_writers == 1);
-    assert(in_readers == 0);
+    in_writing++;
+    assert(in_reading == 0 && in_writing == 1);
+    in_writing--;
 
-    p(mutex);
-    in_writers--;
-    if :: skip ->
-      if :: wt_readers == 0 ->
-        v(mutex)
-      :: else -> skip fi;
-      v(memory)
-    fi
+    P(mutex);
+    writers--;
+    V(mutex);
+    V(memory);
   od
 }
