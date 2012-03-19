@@ -25,7 +25,7 @@ active [READERS] proctype Reader() {
           in_writing++;                         //         then I can start writing
           goto _writing                         //         right away
         :: else ->
-          readers_waiting_to_write++;           //     otherwise if there are readers left
+          readers_waiting_to_write++            //     otherwise if there are readers left
         fi
       }
       d_step {                                  // I'm waiting
