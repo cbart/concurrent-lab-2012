@@ -1,11 +1,13 @@
-#define READERS 2
-#define WRITERS 2
+#define READERS 3
+#define WRITERS 3
 
 bit mutex = 1;
 bit writers = 1;
 bit readers = 0;
+bit readers_turned_to_writers = 0;
 byte waiting_to_read = 0;
 byte waiting_to_write = 0;
+byte readers_waiting_to_write = 0;
 byte in_reading = 0;
 byte in_writing = 0;
 
@@ -38,11 +40,47 @@ active [READERS] proctype Reader() {
 
     P(mutex);
     in_reading--;
-    if :: (in_reading == 0) ->
+    if
+    :: skip ->
+      if :: (in_reading == 0) ->
+        if :: (readers_waiting_to_write > 0) ->
+          V(readers_turned_to_writers)
+        :: else ->
+          V(mutex);
+          V(writers)
+        fi
+      :: else ->
+        V(mutex)
+      fi
+    :: skip ->
+      if :: (in_reading == 0) ->
+        in_writing++;
+        V(mutex);
+        goto _writing
+      :: else ->
+        readers_waiting_to_write++;
+        V(mutex)
+      fi;
+
+      P(readers_turned_to_writers);
+      readers_waiting_to_write--;
+      in_writing++;
       V(mutex);
-      V(writers)
-    :: else ->
-      V(mutex)
+
+      _writing:
+      assert(in_reading == 0);
+      assert(in_writing == 1);
+
+      P(mutex);
+      in_writing--;
+      if :: (readers_waiting_to_write > 0) ->
+        V(readers_turned_to_writers)
+      :: !(readers_waiting_to_write > 0) && (waiting_to_read > 0) ->
+        V(readers)
+      :: else ->
+        V(mutex);
+        V(writers)
+      fi
     fi
   od
 }
