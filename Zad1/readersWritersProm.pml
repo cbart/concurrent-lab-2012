@@ -1,5 +1,5 @@
-#define READERS 1
-#define WRITERS 1
+#define READERS 3
+#define WRITERS 3
 
 bit reading = false;
 bit writing = false;
@@ -15,12 +15,15 @@ active [READERS] proctype Reader() {
       in_reading++
     }
     assert(in_writing == 0);
-    d_step {
-      in_reading--;
-      if :: in_reading == 0 ->
-        reading = false
-      :: else -> skip fi
-    }
+    if
+    :: skip ->  // just leave memory
+      d_step {
+        in_reading--;
+        if :: in_reading == 0 ->
+          reading = false
+        :: else -> skip fi
+      }
+    fi
   od
 }
 
@@ -35,9 +38,26 @@ active [WRITERS] proctype Writer() {
     }
     assert(in_reading == 0);
     assert(in_writing == 1);
-    d_step {
-      in_writing--;
-      writing = false;
-    }
+    if
+    :: skip ->  // just leave memory
+      d_step {
+        in_writing--;
+        writing = false;
+      }
+    :: skip ->  // read yourself something
+      d_step {
+        in_writing--;
+        in_reading++;
+        writing = false;
+        reading = true;
+      }
+      assert(in_writing == 0);
+      d_step {
+        in_reading--;
+        if :: in_reading == 0 ->
+          reading = false
+        :: else -> skip fi
+      }
+    fi
   od
 }
