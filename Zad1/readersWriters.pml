@@ -63,11 +63,32 @@ active [WRITERS] proctype Writer() {
 
     P(mutex);
     in_writing--;
-    if :: (waiting_to_read > 0) ->
-      V(readers)
-    :: else ->
-      V(mutex);
-      V(writers)
+    if
+    :: skip ->
+      if :: (waiting_to_read > 0) ->
+        V(readers)
+      :: else ->
+        V(mutex);
+        V(writers)
+      fi
+    :: skip ->
+      in_reading++;
+      if :: (waiting_to_read > 0) ->
+        V(readers)
+      :: else ->
+        V(mutex)
+      fi;
+
+      assert(in_writing == 0);
+
+      P(mutex);
+      in_reading--;
+      if :: (in_reading == 0) ->
+        V(mutex);
+        V(writers)
+      :: else ->
+        V(mutex)
+      fi
     fi
   od
 }
