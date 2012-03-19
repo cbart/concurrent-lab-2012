@@ -1,5 +1,5 @@
-#define READERS 1
-#define WRITERS 1
+#define READERS 4
+#define WRITERS 4
 
 bit mutex = true;
 bit memory = true;
@@ -19,6 +19,22 @@ inline v(s) {
   s = true
 }
 
+inline writer_leaves() {
+  p(mutex);
+  writers--;
+  v(mutex);
+  v(memory);
+}
+
+inline reader_leaves() {
+  p(mutex);
+  readers--;
+  if :: readers == 0 ->
+    v(memory);
+  :: else -> skip fi;
+  v(mutex);
+}
+
 active [READERS] proctype Reader() {
   do :: skip ->
     p(mutex);
@@ -34,12 +50,7 @@ active [READERS] proctype Reader() {
     assert(in_writers == 0);
     in_readers--;
 
-    p(mutex);
-    readers--;
-    if :: readers == 0 ->
-      v(memory)
-    :: else -> skip fi;
-    v(mutex)
+    reader_leaves()
   od
 }
 
@@ -55,9 +66,6 @@ active [WRITERS] proctype Writer() {
     assert(in_readers == 0);
     in_writers--;
 
-    p(mutex);
-    writers--;
-    v(mutex);
-    v(memory)
+    writer_leaves()
   od
 }
