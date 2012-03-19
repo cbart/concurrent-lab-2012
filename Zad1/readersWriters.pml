@@ -3,7 +3,7 @@
 
 bit mutex = 1;
 bit memory = 1;
-byte writers = 0;
+byte waiting_to_write = 0;
 byte in_reading = 0;
 byte in_writing = 0;
 
@@ -21,7 +21,7 @@ inline V(s) {
 active [READERS] proctype Reader() {
   do :: skip ->
     P(mutex);
-    if :: ((writers > 0) || (in_reading == 0)) ->
+    if :: ((waiting_to_write > 0) || (in_writing > 0) || (in_reading == 0)) ->
       V(mutex);
       P(memory);
       P(mutex)
@@ -43,16 +43,18 @@ active [READERS] proctype Reader() {
 active [WRITERS] proctype Writer() {
   do :: skip ->
     P(mutex);
-    writers++;
+    waiting_to_write++;
     V(mutex);
     P(memory);
-
+    P(mutex);
+    waiting_to_write--;
     in_writing++;
+    V(mutex);
+
     assert(in_reading == 0 && in_writing == 1);
-    in_writing--;
 
     P(mutex);
-    writers--;
+    in_writing--;
     V(mutex);
     V(memory);
   od
