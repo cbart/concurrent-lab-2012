@@ -1,4 +1,4 @@
-#define READERS 2
+#define READERS 1
 #define WRITERS 1
 #define THREADS 3  // READERS + WRITERS
 
@@ -45,6 +45,9 @@ init {
 
 proctype Reader() {
   do :: skip ->
+
+    waiting:
+
     P(mutex);
     waiting_to_read++;
     V(mutex);
@@ -56,6 +59,8 @@ proctype Reader() {
     :: else ->
       V(mutex)
     fi;
+
+    reading:
 
     assert(in_writing == 0);
 
@@ -108,6 +113,9 @@ proctype Reader() {
 
 proctype Writer() {
   do :: skip ->
+
+    waiting:
+
     P(mutex);
     waiting_to_write++;
     V(mutex);
@@ -116,6 +124,8 @@ proctype Writer() {
     waiting_to_write--;
     in_writing++;
     V(mutex);
+
+    writing:
 
     assert(in_reading == 0);
     assert(in_writing == 1);
@@ -151,3 +161,12 @@ proctype Writer() {
     fi
   od
 }
+
+#define reader_waits Reader[1]@waiting
+#define reader_reads Reader[1]@reading
+
+#ifdef READER_WILL_READ
+ltl reader_will_read {
+  [](reader_waits -> <>reader_reads)
+}
+#endif
