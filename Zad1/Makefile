@@ -1,0 +1,4 @@
+dijkstra:
+	spin -DDIJKSTRA -a readersWriters.pml && gcc -o pan -O3 -DSAFETY -DREACH pan.c
+promela:
+	spin -a readersWritersProm.pml && gcc -o pan -O3 -DSAFETY -DREACH pan.c
