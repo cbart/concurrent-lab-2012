@@ -1,42 +1,40 @@
 #ifndef SEMAPHORE_STRONG
 #define SEMAPHORE_STRONG
 
-#include "queue.pml"
-
 typedef sem_t {
-  bit closed;
-  mk_queue(queue, THREADS, pid);
+  bit open;
+  byte waits = 0;
+  byte queue[THREADS] = 0;
 };
 
-#define OPEN 0
-#define CLOSED 1
+#define OPEN 1
+#define CLOSED 0
 
-#define INIT_SEM(sem, value) sem.closed = value
+#define INIT_SEM(sem, value) sem.open = value
 
-chan cont = [0] of {pid};
-#define processSleep() cont?eval(_pid)
-#define processWake(pid) cont!pid
+byte strong_loop = 0;
 
 inline P(sem) {
-  atomic {
-    if :: sem.closed ->
-      enqueue(sem.queue, _pid);
-      processSleep()
-    :: else -> skip fi;
-    sem.closed = true;
+  d_step {
+    sem.queue[sem.waits] = _pid;
+    sem.waits++;
+  };
+  d_step {
+    sem.open && sem.queue[0] == _pid ->
+    sem.open = false;
+    strong_loop = 1;
+    do
+    :: strong_loop < THREADS ->
+      sem.queue[strong_loop - 1] = sem.queue[strong_loop];
+      strong_loop++
+    :: strong_loop >= THREADS -> break
+    od;
+    sem.waits--
   }
 }
 
 inline V(sem) {
-  pid p;
-  atomic {
-    if :: nempty(sem.queue) ->
-      dequeue(sem.queue, p);
-      processWake(p)
-    :: empty(sem.queue) ->
-      sem.closed = false;
-    fi
-  }
+  sem.open = true
 }
 
 #endif  // SEMAPHORE_STRONG

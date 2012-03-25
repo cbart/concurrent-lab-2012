@@ -59,7 +59,8 @@ inline V(sem) {
     if :: !round_robin_flag ->
       all(sem, OPEN)
     :: else -> skip fi;
-    sem.open = true
+    sem.open = true;
+    sem.next_wakeup = succ(sem.next_wakeup)
   }
 }
 
