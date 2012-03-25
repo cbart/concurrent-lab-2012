@@ -1,8 +1,13 @@
-#define READERS 2
-#define WRITERS 2
+#define READERS 1
+#define WRITERS 1
+#define THREADS 4  // READERS + WRITERS
 
 #ifdef DIJKSTRA
 #include "semaphore_dijkstra.pml"
+#endif
+
+#ifdef STRONG
+#include "semaphore_strong.pml"
 #endif
 
 sem_t mutex;

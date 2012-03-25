@@ -2,23 +2,23 @@
 #define SEMAPHORE_DIJKSTRA
 
 typedef sem_t {
-    bit closed;
+    bit open;
 };
 
 #define OPEN 1
 #define CLOSED 0
 
-#define INIT_SEM(sem, value) sem.closed = value
+#define INIT_SEM(sem, value) sem.open = value
 
 inline P(sem) {
   d_step {
-    sem.closed ->
-    sem.closed = false
+    sem.open ->
+    sem.open = false
   }
 }
 
 inline V(sem) {
-  sem.closed = true
+  sem.open = true
 }
 
 #endif  // SEMAPHORE_DIJKSTRA
