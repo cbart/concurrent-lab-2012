@@ -1,6 +1,6 @@
-#define READERS 2
+#define READERS 1
 #define WRITERS 1
-#define THREADS 3  // READERS + WRITERS
+#define THREADS 2  // READERS + WRITERS
 
 #ifdef DIJKSTRA
 #include "semaphore_dijkstra.pml"
@@ -79,6 +79,7 @@ proctype Reader() {
         V(mutex)
       fi
     :: skip ->
+      wants_write:
       if :: (in_reading == 0) ->
         in_writing++;
         V(mutex);
@@ -141,6 +142,8 @@ proctype Writer() {
         V(writers)
       fi
     :: skip ->
+      wants_read:
+
       in_reading++;
       if :: (waiting_to_read > 0) ->
         V(readers)
@@ -178,11 +181,35 @@ ltl reader_will_read {
 
 #ifdef WRITER_WILL_WRITE
 
-#define writer_waits Writer[3]@waiting
-#define writer_writes Writer[3]@writing
+#define writer_waits Writer[THREADS]@waiting
+#define writer_writes Writer[THREADS]@writing
 
 ltl writer_will_write {
   [](writer_waits -> <>writer_writes)
 }
 
-#endif // WRITER_WILL_WRITE
+#endif  // WRITER_WILL_WRITE
+
+
+#ifdef WRITER_WILL_READ
+
+#define writer_wants_read Writer[THREADS]@wants_read
+#define writer_reads Writer[THREADS]@reading
+
+ltl writer_will_read {
+  [](writer_wants_read -> <>writer_reads)
+}
+
+#endif  // WRITER_WILL_READ
+
+
+#ifdef READER_WILL_WRITE
+
+#define reader_wants_read Reader[1]@wants_write
+#define reader_writes Reader[1]@_writing
+
+ltl reader_will_write {
+  [](reader_wants_read -> <>reader_writes)
+}
+
+#endif

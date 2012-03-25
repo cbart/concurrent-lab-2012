@@ -20,3 +20,17 @@ strong_writer_writes:
 	spin -DSTRONG -DWRITER_WILL_WRITE -a readersWriters.pml && gcc -o pan_strong_writer_writes -O3 -DREACH pan.c
 fair_writer_writes:
 	spin -DFAIR -DWRITER_WILL_WRITE -a readersWriters.pml && gcc -o pan_fair_writer_writes -O3 -DREACH pan.c
+
+dijkstra_writer_reads:
+	spin -DDIJKSTRA -DWRITER_WILL_READ -a readersWriters.pml && gcc -o pan_dijkstra_writer_reads -O3 -DREACH pan.c
+strong_writer_reads:
+	spin -DSTRONG -DWRITER_WILL_READ -a readersWriters.pml && gcc -o pan_strong_writer_reads -O3 -DREACH pan.c
+fair_writer_reads:
+	spin -DFAIR -DWRITER_WILL_READ -a readersWriters.pml && gcc -o pan_fair_writer_reads -O3 -DREACH pan.c
+
+dijkstra_reader_writes:
+	spin -DDIJKSTRA -DREADER_WILL_WRITE -a readersWriters.pml && gcc -o pan_dijkstra_reader_writes -O3 -DREACH pan.c
+strong_reader_writes:
+	spin -DSTRONG -DREADER_WILL_WRITE -a readersWriters.pml && gcc -o pan_strong_reader_writes -O3 -DREACH pan.c
+fair_reader_writes:
+	spin -DFAIR -DREADER_WILL_WRITE -a readersWriters.pml && gcc -o pan_fair_reader_writes -O3 -DREACH pan.c
