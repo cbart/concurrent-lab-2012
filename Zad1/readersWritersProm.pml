@@ -1,5 +1,7 @@
-#define READERS 3
-#define WRITERS 3
+#define READERS 1
+#define WRITERS 2
+#define READER_LTL_THREAD 0
+#define WRITER_LTL_THREAD 2
 
 bit waiting_to_write = false;
 byte in_reading = 0;
@@ -8,17 +10,20 @@ byte readers_waiting_to_write = 0;
 
 active [READERS] proctype Reader() {
   do :: skip ->
+    waiting:
     d_step {                                    // atomically,
       ((in_writing == 0)                        //     if no one is writing,
         && !waiting_to_write                    //             no one waits to write,
         && (readers_waiting_to_write == 0)) ->  //             and no priviledged reader->writer waits to write
       in_reading++                              //         then number of agents reading increases
     }
+    reading:
     assert(in_writing == 0);                    // !! READING
     if
     :: skip ->                                  // if I nondeterministically decide not to become a WRITER
       in_reading--;                             //     then there is one working reader less
     :: skip ->                                  // if I nondeterministically decide to become a WRITER
+      wants_write:
       atomic {
         in_reading--;
         if :: in_reading == 0 ->                //     if I'm last reader out
@@ -44,6 +49,7 @@ active [READERS] proctype Reader() {
 
 active [WRITERS] proctype Writer() {
   do :: skip ->
+    waiting:
     waiting_to_write = true;                    // I am waiting to write
     d_step {                                    // atomically,
       ((in_reading == 0)                        //     if no one is reading,
@@ -52,18 +58,24 @@ active [WRITERS] proctype Writer() {
       waiting_to_write = false;                 //         then I no more wait to write
       in_writing++                              //         and number of agents writing increases
     }
+    writing:
     assert(in_reading == 0);                    // !! WRITING
     assert(in_writing == 1);                    // !!
     if
     :: skip ->                                  // if I nondeterministically decide not to become a READER
       in_writing--;                             //     then there is one less person writing
     :: skip ->                                  // if I nondeterministrically decide to become a READER
+      wants_read:
       d_step {
         in_writing--;                           //     then there is one less person writing
         in_reading++;                           //     and one more reading
       }
+      reading:
       assert(in_writing == 0);                  // !! READING
       in_reading--;
     fi
   od
 }
+
+
+#include "ltl.pml"

@@ -1,6 +1,8 @@
 #define READERS 1
 #define WRITERS 1
 #define THREADS 2  // READERS + WRITERS
+#define READER_LTL_THREAD 1
+#define WRITER_LTL_THREAD THREADS
 
 #ifdef DIJKSTRA
 #include "semaphore_dijkstra.pml"
@@ -167,49 +169,4 @@ proctype Writer() {
   od
 }
 
-#ifdef READER_WILL_READ
-
-#define reader_waits Reader[1]@waiting
-#define reader_reads Reader[1]@reading
-
-ltl reader_will_read {
-  [](reader_waits -> <>reader_reads)
-}
-
-#endif  // READER_WILL_READ
-
-
-#ifdef WRITER_WILL_WRITE
-
-#define writer_waits Writer[THREADS]@waiting
-#define writer_writes Writer[THREADS]@writing
-
-ltl writer_will_write {
-  [](writer_waits -> <>writer_writes)
-}
-
-#endif  // WRITER_WILL_WRITE
-
-
-#ifdef WRITER_WILL_READ
-
-#define writer_wants_read Writer[THREADS]@wants_read
-#define writer_reads Writer[THREADS]@reading
-
-ltl writer_will_read {
-  [](writer_wants_read -> <>writer_reads)
-}
-
-#endif  // WRITER_WILL_READ
-
-
-#ifdef READER_WILL_WRITE
-
-#define reader_wants_read Reader[1]@wants_write
-#define reader_writes Reader[1]@_writing
-
-ltl reader_will_write {
-  [](reader_wants_read -> <>reader_writes)
-}
-
-#endif
+#include "ltl.pml"
