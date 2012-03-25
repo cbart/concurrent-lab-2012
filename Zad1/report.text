@@ -1,0 +1,166 @@
+Zadanie zaliczeniowe z Promeli
+Raport
+
+Cezary Bartoszuk <cb277617@students.mimuw.edu.pl>
+
+
+0. Podsumowanie
+===============
+
+Proponowane rozwiązanie problemu czytelników i pisarzy z zamianami ról zostało
+ocenione jako bezpieczne we wszystkich testach dla 2 i 3 procesów.
+Dla 4 procesów przypadek z semaforem uczciwym po dość długim czasie pracy był
+unicestwiany na students.
+
+Żywotność standardowych czytelników i pisarzy została pokazana w przypadku
+semafora silnego i uczciwego.
+
+Ciekawy przypadek to pisarz piszący w czytelni: Przy dwu czytelnikach,
+jeden zawsze będzie zamieniał się w pisarza. Drugi szybko wyjdzie z czytelni
+i zaraz ustawi się w kolejce. Kończąc pisać czytelnik wpuszcza w pierwszej
+kolejności czytelnika. Ten przeplot może zagłodzić pisarza.
+
+Dodatkowo proponowane rozwiązanie zagładza czytelnika próbującego zmeinić
+się w pisarza. Gdy nikt inny nie czeka na czytanie pisarz może zająć
+czytelnię pisząc i zmieniając się w czytelnika za każdym razem.
+
+W modelu w Promeli bez semaforów czytelnik nie zawsze dostanie się do czytelni,
+lecz zawsze gdy zdecyduje się pisać po przeczytaniu - będzie mógł to zrobić.
+Pisarz pisze żywotnie jedynie gdy jest sam. Jeżeli zdecyduje się na czytanie
+zawsze mu się to powiedzie.
+
+
+1. Bezpieczeństwo
+=================
+
+   #procesów | 2 |   3   |     4     |
+#czytelników | 1 | 1 | 2 | 1 | 2 | 3 |
+    #pisarzy | 1 | 2 | 1 | 3 | 2 | 1 |
+-------------+---+---+---+---+---+---+
+     promela | B | B | B | B | B | B |
+-------------+---+---+---+---+---+---+
+    Dijkstra | B | B | B | B | B | B |
+-------------+---+---+---+---+---+---+
+     uczciwy | B | B | B | X | X | - |
+-------------+---+---+---+---+---+---+
+       silny | B | B | B | B | B | - |
+-------------+---+---+---+---+---+---+
+
+Legenda:
+  B - bezpieczny
+  X - unicestwiony
+  - - nie testowano
+
+
+2. Żywotność
+============
+
+2.1. Czytelnik - jeżeli chce - zawsze kiedyś wejdzie do czytelni
+
+   #procesów | 2 |   3   |     4     |
+#czytelników | 1 | 1 | 2 | 1 | 2 | 3 |
+    #pisarzy | 1 | 2 | 1 | 3 | 2 | 1 |
+-------------+---+---+---+---+---+---+
+    Dijkstra | N | - | - | - | - | - |
+-------------+---+---+---+---+---+---+
+     uczciwy | Ż | Ż | Ż | X | - | - |
+-------------+---+---+---+---+---+---+
+       silny | Ż | Ż | Ż | Ż | X | - |
+-------------+---+---+---+---+---+---+
+
+Legenda:
+  Ż - żywotny
+  N - nieżywotny
+  X - unicestwiony
+  - - nie testowano
+
+
+2.2. Pisarz - jeżeli chce - zawsze kiedyś wejdzie do czytelni
+
+   #procesów | 2 |   3   |     4     |
+#czytelników | 1 | 1 | 2 | 1 | 2 | 3 |
+    #pisarzy | 1 | 2 | 1 | 3 | 2 | 1 |
+-------------+---+---+---+---+---+---+
+    Dijkstra | N | - | - | - | - | - |
+-------------+---+---+---+---+---+---+
+     uczciwy | Ż | Ż | N*| - | - | - |
+-------------+---+---+---+---+---+---+
+       silny | Ż | Ż | N*| - | - | - |
+-------------+---+---+---+---+---+---+
+
+Legenda:
+  Ż - żywotny
+  N - nieżywotny
+  - - nie testowano
+
+N* - Pisarz może zostać zagłodzony przez dwu czytelników, którzy będą
+     na zmianę zamieniać się w pisarzy (po skończeniu pisania czytelnik
+     wpuszcza czytelnika, a nie pisarza).
+
+
+2.3. Pisarz - jeżeli chce - zawsze kiedyś zmieni się w czytelnika
+
+   #procesów | 2 |   3   |     4     |
+#czytelników | 1 | 1 | 2 | 1 | 2 | 3 |
+    #pisarzy | 1 | 2 | 1 | 3 | 2 | 1 |
+-------------+---+---+---+---+---+---+
+    Dijkstra | N | - | - | - | - | - |
+-------------+---+---+---+---+---+---+
+     uczciwy | X | - | - | - | - | - |
+-------------+---+---+---+---+---+---+
+       silny | Ż | Ż | Ż | - | - | - |
+-------------+---+---+---+---+---+---+
+
+Legenda:
+  Ż - żywotny
+  N - nieżywotny
+  X - unicestwiony
+  - - nie testowano
+
+
+2.4. Czytelnik - jeżeli chce - zawsze kiedyś zmieni się w pisarza
+
+   #procesów | 2 |   3   |     4     |
+#czytelników | 1 | 1 | 2 | 1 | 2 | 3 |
+    #pisarzy | 1 | 2 | 1 | 3 | 2 | 1 |
+-------------+---+---+---+---+---+---+
+    Dijkstra | N | - | - | - | - | - |
+-------------+---+---+---+---+---+---+
+     uczciwy | N*| - | - | - | - | - |
+-------------+---+---+---+---+---+---+
+       silny | N*| - | - | - | - | - |
+-------------+---+---+---+---+---+---+
+
+Legenda:
+  Ż - żywotny
+  N - nieżywotny
+  - - nie testowano
+
+N* - Czytelnik, który chce pisać może zostać zagłodzony przez pisarza
+     zamieniającego się zawsze w czytelnika.
+
+3. Model w Promeli bez semaforów
+================================
+
+    #procesów | 2 |   3   |     4     |       5       |         6         |
+ #czytelników | 1 | 1 | 2 | 1 | 2 | 3 | 1 | 2 | 3 | 4 | 1 | 2 | 3 | 4 | 5 |
+     #pisarzy | 1 | 2 | 1 | 3 | 2 | 1 | 4 | 3 | 2 | 1 | 5 | 4 | 3 | 2 | 1 |
+--------------+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+ reader reads | N*| N | N | N | N | N | N | N | N | N | N | N | N | N | N |
+--------------+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+reader writes | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż |
+--------------+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+writer writes | Ż | N^| Ż | N | N | Ż | N | N | N | Ż | N | N | N | N | Ż |
+--------------+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+ writer reads | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż | Ż |
+--------------+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+
+Legenda:
+  Ż - żywotny
+  N - nieżywotny
+
+N* - czytelnik może zostać zagłodzony przez pisarza, wciąż wchodzącego
+     do czytelni
+N^ - pisarz może zagłodzić swojego kolegę zmieniając się w czytelnika,
+     wpuszczając czytelnika, wychodząc z czytelni i ustawiając się
+     w kolejce do pisania
