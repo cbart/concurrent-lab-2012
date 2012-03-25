@@ -1,6 +1,6 @@
-#define READERS 1
+#define READERS 2
 #define WRITERS 1
-#define THREADS 2  // READERS + WRITERS
+#define THREADS 3  // READERS + WRITERS
 
 #ifdef DIJKSTRA
 #include "semaphore_dijkstra.pml"
@@ -178,8 +178,8 @@ ltl reader_will_read {
 
 #ifdef WRITER_WILL_WRITE
 
-#define writer_waits Writer[1]@waiting
-#define writer_writes Writer[1]@writing
+#define writer_waits Writer[3]@waiting
+#define writer_writes Writer[3]@writing
 
 ltl writer_will_write {
   [](writer_waits -> <>writer_writes)

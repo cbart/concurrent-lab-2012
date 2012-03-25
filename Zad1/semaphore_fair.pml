@@ -29,6 +29,7 @@ inline all(sem, value) {
 #define succ(n) ((n + 1) % THREADS)
 #define waits(sem) sem.waits[_pid - 1]
 #define hang(sem) sem.hang[_pid - 1]
+#define n(sem, i) ((sem.next_wakeup + i) % THREADS)
 
 inline P(sem) {
   waits(sem) = true;
@@ -43,24 +44,24 @@ inline P(sem) {
 inline V(sem) {
   d_step {
     round_robin_flag = false;
-    round_robin_loop = succ(sem.next_wakeup);
+    round_robin_loop = 0;
     do
-    :: round_robin_loop != sem.next_wakeup ->
-      if :: sem.waits[round_robin_loop] ->
-        sem.hang[round_robin_loop] = 1;
-        sem.next_wakeup = succ(round_robin_loop);
-        round_robin_loop = succ(round_robin_loop);
-        round_robin_flag = true
+    :: round_robin_loop < THREADS ->
+      if :: sem.waits[n(sem, round_robin_loop)] ->
+        sem.hang[n(sem, round_robin_loop)] = 1;
+        sem.next_wakeup = succ(n(sem, round_robin_loop));
+        round_robin_flag = true;
+        break
       :: else ->
         round_robin_loop = succ(round_robin_loop)
       fi
-    :: round_robin_loop == sem.next_wakeup -> break
+    :: round_robin_loop >= THREADS -> break
     od;
     if :: !round_robin_flag ->
       all(sem, OPEN)
-    :: else -> skip fi;
-    sem.open = true;
-    sem.next_wakeup = succ(sem.next_wakeup)
+    :: else -> skip
+    fi;
+    sem.open = true
   }
 }
 
